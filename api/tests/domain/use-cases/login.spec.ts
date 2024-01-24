@@ -1,4 +1,4 @@
-import { mock } from 'jest-mock-extended'
+import { MockProxy, mock } from 'jest-mock-extended'
 
 interface UserFindByEmailRepository {
   findByEmail: (email: string) => Promise<undefined>
@@ -21,10 +21,15 @@ class LoginUseCase {
 }
 
 describe('Login UseCase', () => {
-  it('should call UserFindByEmailRepository with correct email', async () => {
-    const userRepo = mock<UserFindByEmailRepository>()
-    const sut = new LoginUseCase(userRepo)
+    let userRepo: MockProxy<UserFindByEmailRepository>
+    let sut: LoginUseCase
 
+    beforeEach(()=>{
+        userRepo = mock()
+        sut = new LoginUseCase(userRepo)
+    })
+
+  it('should call UserFindByEmailRepository with correct email', async () => {
     await sut.execute({ email: 'any_email', password: 'any_password' })
 
     expect(userRepo.findByEmail).toHaveBeenCalledWith('any_email')
@@ -32,9 +37,7 @@ describe('Login UseCase', () => {
   })
 
   it('should return undefined if user is not found', async () => {
-    const userRepo = mock<UserFindByEmailRepository>()
     userRepo.findByEmail.mockResolvedValueOnce(undefined)
-    const sut = new LoginUseCase(userRepo)
 
     const result = await sut.execute({
       email: 'any_email',
