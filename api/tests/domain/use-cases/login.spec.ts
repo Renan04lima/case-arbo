@@ -1,7 +1,7 @@
 import { mock } from 'jest-mock-extended'
 
 interface UserFindByEmailRepository {
-  findByEmail: (email: string) => Promise<void>
+  findByEmail: (email: string) => Promise<undefined>
 }
 
 namespace LoginUseCase {
@@ -14,8 +14,9 @@ namespace LoginUseCase {
 class LoginUseCase {
   constructor(private readonly userRepo: UserFindByEmailRepository) {}
 
-  async execute({ email }: LoginUseCase.Params): Promise<void> {
+  async execute({ email }: LoginUseCase.Params): Promise<undefined> {
     await this.userRepo.findByEmail(email)
+    return undefined
   }
 }
 
@@ -30,7 +31,18 @@ describe('Login UseCase', () => {
     expect(userRepo.findByEmail).toHaveBeenCalledTimes(1)
   })
 
-  it.todo('should return null if user is not found')
+  it('should return undefined if user is not found', async () => {
+    const userRepo = mock<UserFindByEmailRepository>()
+    userRepo.findByEmail.mockResolvedValueOnce(undefined)
+    const sut = new LoginUseCase(userRepo)
+
+    const result = await sut.execute({
+      email: 'any_email',
+      password: 'any_password',
+    })
+
+    expect(result).toBeUndefined()
+  })
 
   it.todo('should call HashComparer with correct plaintext')
 
