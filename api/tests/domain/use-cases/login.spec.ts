@@ -1,7 +1,18 @@
 import { MockProxy, mock } from 'jest-mock-extended'
 
+type User = {
+  id: string
+  name: string
+  email: string
+  hashedPassword: string
+}
+
 interface UserFindByEmailRepository {
-  findByEmail: (email: string) => Promise<undefined>
+  findByEmail: (email: string) => Promise<User | undefined>
+}
+
+interface HashComparer {
+  compare: (plaintext: string, digest: string) => Promise<boolean>
 }
 
 namespace LoginUseCase {
@@ -12,22 +23,35 @@ namespace LoginUseCase {
 }
 
 class LoginUseCase {
-  constructor(private readonly userRepo: UserFindByEmailRepository) {}
+  constructor(
+    private readonly userRepo: UserFindByEmailRepository,
+    private readonly hashComparer: HashComparer,
+  ) {}
 
-  async execute({ email }: LoginUseCase.Params): Promise<undefined> {
-    await this.userRepo.findByEmail(email)
-    return undefined
+  async execute({ email, password }: LoginUseCase.Params): Promise<undefined> {
+    const user = await this.userRepo.findByEmail(email)
+    if (user === undefined) return undefined
+
+    this.hashComparer.compare(password, user.hashedPassword)
   }
 }
 
 describe('Login UseCase', () => {
-    let userRepo: MockProxy<UserFindByEmailRepository>
-    let sut: LoginUseCase
+  let userRepo: MockProxy<UserFindByEmailRepository>
+  let hashComparer: MockProxy<HashComparer>
+  let sut: LoginUseCase
 
-    beforeEach(()=>{
-        userRepo = mock()
-        sut = new LoginUseCase(userRepo)
+  beforeEach(() => {
+    userRepo = mock()
+    hashComparer = mock()
+    userRepo.findByEmail.mockResolvedValue({
+      id: 'any_id',
+      name: 'any_name',
+      email: 'any_email',
+      hashedPassword: 'hashed_password',
     })
+    sut = new LoginUseCase(userRepo, hashComparer)
+  })
 
   it('should call UserFindByEmailRepository with correct email', async () => {
     await sut.execute({ email: 'any_email', password: 'any_password' })
@@ -47,7 +71,14 @@ describe('Login UseCase', () => {
     expect(result).toBeUndefined()
   })
 
-  it.todo('should call HashComparer with correct plaintext')
+  it('should call HashComparer with correct params', async () => {
+    await sut.execute({ email: 'any_email', password: 'any_password' })
+
+    expect(hashComparer.compare).toHaveBeenCalledWith(
+      'any_password',
+      'hashed_password',
+    )
+  })
 
   it.todo('should return null if password is incorrect')
 
