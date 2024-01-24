@@ -32,7 +32,11 @@ class LoginUseCase {
     const user = await this.userRepo.findByEmail(email)
     if (user === undefined) return undefined
 
-    this.hashComparer.compare(password, user.hashedPassword)
+    const isValid = await this.hashComparer.compare(
+      password,
+      user.hashedPassword,
+    )
+    if (!isValid) return undefined
   }
 }
 
@@ -80,7 +84,16 @@ describe('Login UseCase', () => {
     )
   })
 
-  it.todo('should return null if password is incorrect')
+  it('should return undefined if password is incorrect', async () => {
+    hashComparer.compare.mockResolvedValueOnce(false)
+
+    const result = await sut.execute({
+      email: 'any_email',
+      password: 'any_password',
+    })
+
+    expect(result).toBeUndefined()
+  })
 
   it.todo('should call Encrypter with correct params')
 
