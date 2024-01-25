@@ -1,72 +1,9 @@
 import { MockProxy, mock } from 'jest-mock-extended'
-
-type User = {
-  id: string
-  name: string
-  email: string
-  hashedPassword: string
-}
-
-interface UserFindByEmailRepository {
-  findByEmail: (email: string) => Promise<User | undefined>
-}
-
-interface HashComparer {
-  compare: (plaintext: string, digest: string) => Promise<boolean>
-}
-
-interface Encrypter {
-  encrypt: (plaintext: string) => Promise<string>
-}
-
-namespace LoginUseCase {
-  export type Params = {
-    email: string
-    password: string
-  }
-
-  export type Result =
-    | {
-        user: {
-          id: string
-          email: string
-        }
-        token: string
-      }
-    | undefined
-}
-
-class LoginUseCase {
-  constructor(
-    private readonly userRepo: UserFindByEmailRepository,
-    private readonly hashComparer: HashComparer,
-    private readonly encrypter: Encrypter,
-  ) {}
-
-  async execute({
-    email,
-    password,
-  }: LoginUseCase.Params): Promise<LoginUseCase.Result> {
-    const user = await this.userRepo.findByEmail(email)
-    if (user === undefined) return undefined
-
-    const isValid = await this.hashComparer.compare(
-      password,
-      user.hashedPassword,
-    )
-    if (!isValid) return undefined
-
-    const token = await this.encrypter.encrypt(user.id)
-
-    return {
-      user: {
-        id: user.id,
-        email: user.email,
-      },
-      token,
-    }
-  }
-}
+import { Encrypter } from '@/domain/contracts/gateways/encrypter'
+import { HashComparer } from '@/domain/contracts/gateways/hash'
+import { UserFindByEmailRepository } from '@/domain/contracts/repos/user-repo'
+import { User } from '@/domain/entities/user'
+import { LoginUseCase } from '@/domain/use-cases/login'
 
 describe('Login UseCase', () => {
   let userRepo: MockProxy<UserFindByEmailRepository>
