@@ -16,15 +16,15 @@ type Result =
     }
   | undefined
 
-export type LoginUseCase = (input: Params) => Promise<Result>
+export type Authentication = (input: Params) => Promise<Result>
 
 export type Setup = (
   userRepo: UserFindByEmailRepository,
   hashComparer: HashComparer,
   encrypter: Encrypter,
-) => LoginUseCase
+) => Authentication
 
-export const setupLogin: Setup =
+export const setupAuthentication: Setup =
   (userRepo, hashComparer, encrypter) =>
   async ({ email, password }) => {
     const user = await userRepo.findByEmail(email)
