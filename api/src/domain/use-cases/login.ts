@@ -2,44 +2,38 @@ import { Encrypter } from '@/domain/contracts/gateways/encrypter'
 import { HashComparer } from '@/domain/contracts/gateways/hash'
 import { UserFindByEmailRepository } from '@/domain/contracts/repos/user-repo'
 
-export namespace LoginUseCase {
-  export type Params = {
-    email: string
-    password: string
-  }
-
-  export type Result =
-    | {
-        user: {
-          id: string
-          email: string
-        }
-        token: string
-      }
-    | undefined
+type Params = {
+  email: string
+  password: string
 }
+type Result =
+  | {
+      user: {
+        id: string
+        email: string
+      }
+      token: string
+    }
+  | undefined
 
-export class LoginUseCase {
-  constructor(
-    private readonly userRepo: UserFindByEmailRepository,
-    private readonly hashComparer: HashComparer,
-    private readonly encrypter: Encrypter,
-  ) {}
+export type LoginUseCase = (input: Params) => Promise<Result>
 
-  async execute({
-    email,
-    password,
-  }: LoginUseCase.Params): Promise<LoginUseCase.Result> {
-    const user = await this.userRepo.findByEmail(email)
+export type Setup = (
+  userRepo: UserFindByEmailRepository,
+  hashComparer: HashComparer,
+  encrypter: Encrypter,
+) => LoginUseCase
+
+export const setupLogin: Setup =
+  (userRepo, hashComparer, encrypter) =>
+  async ({ email, password }) => {
+    const user = await userRepo.findByEmail(email)
     if (user === undefined) return undefined
 
-    const isValid = await this.hashComparer.compare(
-      password,
-      user.hashedPassword,
-    )
+    const isValid = await hashComparer.compare(password, user.hashedPassword)
     if (!isValid) return undefined
 
-    const token = await this.encrypter.encrypt(user.id)
+    const token = await encrypter.encrypt(user.id)
 
     return {
       user: {
@@ -49,4 +43,3 @@ export class LoginUseCase {
       token,
     }
   }
-}
