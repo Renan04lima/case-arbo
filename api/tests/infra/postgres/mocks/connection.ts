@@ -1,4 +1,5 @@
 import { DataType, newDb } from 'pg-mem'
+import { PgConnection } from '@/infra/postgres/helpers/connection'
 
 export const makeFakeDb = async (entities: any[]) => {
   const db = newDb({
@@ -28,5 +29,7 @@ export const makeFakeDb = async (entities: any[]) => {
 
   await connection.initialize()
   await connection.synchronize()
-  return { db, connection }
+  PgConnection.getInstance().setFakeDb(connection)
+
+  return db
 }
