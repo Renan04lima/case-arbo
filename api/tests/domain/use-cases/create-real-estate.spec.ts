@@ -30,6 +30,7 @@ describe('CreateRealEstate UseCase', () => {
       },
       type: TYPES_OF_REAL_ESTATE.APARTMENT,
       value: 100000,
+      user_id: 'any_user_id',
     }
     fakeRealEstate = {
       ...fakeRealEstateData,
