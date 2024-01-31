@@ -1,7 +1,8 @@
 import { UploadImages } from '@/domain/contracts/gateways/upload-images'
 import { CreateRealEstateRepository } from '@/domain/contracts/repos/real-estate-repo'
+import { RealEstate } from '@/domain/entities/real-estate';
 
-type Params = CreateRealEstateRepository.Params & {
+type Params = Omit<RealEstate, 'id' | 'images_url'> & {
   files: { buffer: Buffer; mimetype: string }[]
 }
 type Result = CreateRealEstateRepository.Result
@@ -16,7 +17,7 @@ export type Setup = (
 export const setupCreateRealEstate: Setup =
   (realEstateRepo, uploadImages) =>
   async ({ files, ...data }) => {
-    await uploadImages.upload(files)
+    const images_url = await uploadImages.upload(files)
 
-    return await realEstateRepo.create(data)
+    return await realEstateRepo.create({ ...data, images_url })
   }

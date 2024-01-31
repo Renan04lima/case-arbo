@@ -17,5 +17,5 @@ export type RealEstate = {
   }
   type: TYPES_OF_REAL_ESTATE
   value: number
-  image_url: string
+  images_url: string[]
 }

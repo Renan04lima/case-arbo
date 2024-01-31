@@ -1,3 +1,3 @@
 export interface UploadImages {
-  upload: (files: { buffer: Buffer; mimetype: string }[]) => Promise<string>
+  upload: (files: { buffer: Buffer; mimetype: string }[]) => Promise<string[]>
 }
