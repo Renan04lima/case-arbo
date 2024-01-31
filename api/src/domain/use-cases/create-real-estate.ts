@@ -1,7 +1,7 @@
 import { CreateRealEstateRepository } from '../contracts/repos/real-estate-repo'
 
 type Params = CreateRealEstateRepository.Params
-type Result = void
+type Result = CreateRealEstateRepository.Result
 
 export type CreateRealEstate = (input: Params) => Promise<Result>
 
@@ -11,5 +11,5 @@ export type Setup = (
 
 export const setupCreateRealEstate: Setup =
   (realEstateRepo) => async (data) => {
-    await realEstateRepo.create(data)
+    return await realEstateRepo.create(data)
   }
