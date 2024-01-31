@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm'
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm'
+import { PgRealEstate } from './pg-real-estate'
 
 @Entity('users')
 export class PgUser {
@@ -13,4 +14,7 @@ export class PgUser {
 
   @Column({ name: 'hashed_password' })
   hashedPassword!: string
+
+  @OneToMany(() => PgRealEstate, (realEstate) => realEstate.user)
+  realEstates!: PgRealEstate[]
 }
