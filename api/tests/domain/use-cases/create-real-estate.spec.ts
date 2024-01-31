@@ -12,11 +12,13 @@ describe('CreateRealEstate UseCase', () => {
   let realEstateRepo: MockProxy<CreateRealEstateRepository>
   let uploadImages: MockProxy<UploadImages>
   let sut: CreateRealEstate
+  let fakeRealEstateData: Omit<RealEstate, 'id' | 'images_url'>
   let fakeRealEstate: RealEstate
+  let images_url: string[]
 
   beforeAll(() => {
-    fakeRealEstate = {
-      id: 'any_id',
+    images_url = ['https://example.com/image.jpg']
+    fakeRealEstateData = {
       address: {
         zipcode: '12345-678',
         street: 'Main Street',
@@ -28,11 +30,16 @@ describe('CreateRealEstate UseCase', () => {
       },
       type: TYPES_OF_REAL_ESTATE.APARTMENT,
       value: 100000,
-      image_url: 'https://example.com/image.jpg',
+    }
+    fakeRealEstate = {
+      ...fakeRealEstateData,
+      id: 'any_id',
+      images_url,
     }
     realEstateRepo = mock()
     uploadImages = mock()
     realEstateRepo.create.mockResolvedValue(fakeRealEstate)
+    uploadImages.upload.mockResolvedValue(images_url)
   })
 
   beforeEach(() => {
@@ -41,11 +48,14 @@ describe('CreateRealEstate UseCase', () => {
 
   it('should call CreateRealEstateRepository with correct params', async () => {
     await sut({
-      ...fakeRealEstate,
+      ...fakeRealEstateData,
       files: [{ buffer: Buffer.from('any_buffer'), mimetype: 'image/jpg' }],
     })
 
-    expect(realEstateRepo.create).toHaveBeenCalledWith(fakeRealEstate)
+    expect(realEstateRepo.create).toHaveBeenCalledWith({
+      ...fakeRealEstateData,
+      images_url,
+    })
     expect(realEstateRepo.create).toHaveBeenCalledTimes(1)
   })
 
